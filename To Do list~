@@ -1,0 +1,10 @@
+Fruit is to be photographed
+	Sensor analog data to be compared and a 'click' message to be sent to python
+	Image taking needs to be done in python
+	Image processing needs to be done in python
+		Final Grade needs to be decided
+	Python needs to send 'fruitData' back to arduino in the form of 'A' 'B' 'C' 'D' 'E'(default)
+Arduino once got the data needs to wait for IR sensor
+Then the platform needs to be set at the right moment
+Then needs to be reset for the next fruit(depending on fruit grade)
+
