@@ -107,17 +107,17 @@ void loop() {
       if(lastFruit==50)lastFruit=0;
     }
 
-    if(analogRead(A10)<50 && photoElec==1)//A10 is the PhotoElectric Sensor
+    if(analogRead(A1)<50 && photoElec==1)//A10 is the PhotoElectric Sensor
     {
       delay(2);
-      if(analogRead(A10)<50)
+      if(analogRead(A1)<50)
       {
         photoElec=0;
         Serial.println("PEended");//Tells the Python Code that PhotoElectric sensor was triggered before and has just switched off.
       }
     }
 
-    if(analogRead(A10)>50)
+    if(analogRead(A1)>50)
     {
       photoElec=1;
     }
@@ -165,6 +165,16 @@ void loop() {
     
     if((millis()%60000) < 5)  //After every 1 minute, accounting for a 5 millisecond program runtime to get to this if statement
     {
-      //Code to send across the number of each item A B C D and Unknown
+      Serial.print("Quant:");
+      Serial.print(fruitQuant[0]);
+      Serial.print(":");
+      Serial.print(fruitQuant[1]);
+      Serial.print(":");
+      Serial.print(fruitQuant[2]);
+      Serial.print(":");
+      Serial.print(fruitQuant[3]);
+      Serial.print(":");
+      Serial.print(fruitQuant[4]);
+      Serial.println();
     }
 }

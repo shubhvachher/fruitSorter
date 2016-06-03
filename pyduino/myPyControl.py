@@ -10,15 +10,19 @@ ImagerDelay = 1
 thresh1=100
 thresh2=200
 #Grading Parameters
-A = [100,120]
-B = [120,125]
-C = [125,130]
+A = [100,119]
+B = [120,124]
+C = [125,129]
 D = [130,150]
 
-fruitSorter = serial.Serial(port='/dev/ttyAC*', baudrate=9600, timeout=5)
+ardDir = input("Enter the directory of your board : ")
+
+fruitSorter = serial.Serial(port=ardDir, baudrate=9600, timeout=5)
 
 while True:
+	print("Waiting for line")
 	line_received = fruitSorter.readline().decode().strip()
+	print(line_received)
 	if('P' in line_received):
 		time.sleep(seconds=ImagerDelay)
 		# Camera 1 is the external webcam
@@ -47,3 +51,24 @@ while True:
 		center,rad=cv2.minEnclosingCircle(pointForm)
 		center = tuple(np.roll(center,1))
 		#image Processing ends
+
+		if(A[0]<=rad<=A[1]):
+			fruitSorter.write("A")
+		elif(B[0]<=rad<=B[1]):
+			fruitSorter.write("B")
+		elif(C[0]<=rad<=C[1]):
+			fruitSorter.write("C")
+		elif(D[0]<=rad<=D[1]):
+			fruitSorter.write("D")
+		else:
+			fruitSorter.write("E")
+	elif('Quant' in line_received):
+		Quants = line_received.split(':')
+		print("The Quantities of fruits sorted are : ")
+		print("A : " + Quants[1])
+		print("B : " + Quants[2])
+		print("C : " + Quants[3])
+		print("D : " + Quants[4])
+		print("Unknown : " + Quants[5])
+	else:
+		print("Unknown Line")
