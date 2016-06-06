@@ -11,8 +11,8 @@ def distCalc(pt1,pt2):       #calculation of sistance from centroid to point on 
 filename=input("Please Enter the filename : ")
 image = cv2.imread(filename)
 
-image_bw = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-img = cv2.Canny(image_bw,100,200)
+image_bw = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+img = cv2.Canny(image_bw,10,245)
 
 a=[[],[]]      #Getting the points on the edge of the contour.
 for i in range(0,len(img)):
@@ -24,6 +24,8 @@ for i in range(0,len(img)):
 a=np.transpose(a)
 a = np.array(a)
 center,rad=cv2.minEnclosingCircle(a)    #Getting the minimum enclosing circle so that we can get the radius of the fruits that have an opened contour.
+center = tuple(np.roll(center,1))
+fig,ax=plt.subplots(1,1)
 ax.imshow(image_bw)
 circ=plt.Circle(center,rad,fill=False)
 ax.add_patch(circ)
