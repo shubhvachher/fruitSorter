@@ -4,23 +4,32 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-#Time between fruit position detection and image taking
+#Time between fruit position detection and image taking in seconds
 ImagerDelay = 1
 #Threshold Values. Highly Image dependant.
 thresh1=100
 thresh2=200
-#Grading Parameters
-A = [100,119]
-B = [120,124]
-C = [125,129]
-D = [130,150]
+#Grading Parameters in millimeters
+A = [50,59.5]
+B = [60,62]
+C = [62.5,64.5]
+D = [65,75]
+
+#Converting pixels to millimeters. pixels = milli*convFactor
+convFactor = 2
+
+A = A*convFactor
+B = B*convFactor
+C = C*convFactor
+D = D*convFactor
 
 ardDir = input("Enter the directory of your board : ")
+bRate = input("Enter the baud rate for serial comm. : ")
 
-fruitSorter = serial.Serial(port=ardDir, baudrate=9600, timeout=5)
+fruitSorter = serial.Serial(port=ardDir, baudrate=bRate, timeout=5)
 
 while True:
-	print("Waiting for line")
+	print("Waiting for line...")
 	line_received = fruitSorter.readline().decode().strip()
 	print(line_received)
 	if('P' in line_received):

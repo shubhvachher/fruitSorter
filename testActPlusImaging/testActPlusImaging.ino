@@ -1,22 +1,24 @@
 /*
  * Variable List
+ *
  * Variable t holds the time required for the fruit to travel from the imager to the end of the conveyer belt.
  * defDelayTime(milliseconds) holds the default value of t.
  * mechanismDelay(milliseconds) holds the time it takes for the mechanism to settle into a particular grade postion.
  * del(milliseconds) holds the time it takes between a fruit falling onto the sorter and falling into its basket.
  * fruitList holds a list of the fruits that have been identified by the imager.
  * fruitQuant holds the quantity of fruits that have passed the IR sensor point.
- * setTime holds the setting time for the mechanism for a particular fruit in the fruitList.
- * 
+ * setTime holds the times when the sorter needs to be set to a particular postition.
+ *
  */
 
 unsigned long t=0, del=2000, setTime[50];
 int defDelayTime=6000,mechanismDelay = 200;
+int fruitQuant[5]={0,0,0,0,0}; //Holds number of 'A', 'B', 'C', 'D', 'Undefined'
+char fruitList[50];
+
 int lastFruit=0, nextToBeSet=0, nextToBeDeleted=0;
 int canBeServiced=1, startedService=0;
-int fruitQuant[5]={0,0,0,0,0}; //Holds number of 'A', 'B', 'C', 'D', 'Undefined'
-char sort,command;
-char fruitList[50];
+char sort;
 
 int photoElec=0;
 
@@ -113,7 +115,7 @@ void loop() {
       if(analogRead(A1)<50)
       {
         photoElec=0;
-        Serial.println("PEended");//Tells the Python Code that PhotoElectric sensor was triggered before and has just switched off.
+        Serial.println("PEendMark");//Tells the Python Code that PhotoElectric sensor was triggered before and has just switched off.
       }
     }
 
@@ -121,17 +123,17 @@ void loop() {
     {
       photoElec=1;
     }
-    
+
     if(analogRead(A4)<450 && canBeServiced==0)//A4 is the IR Sensor
     {
       delay(2);
       if(analogRead(A4)<450)
       {
-        canBeServiced=1; 
+        canBeServiced=1;
       }
     }
-    
-    if((startedService==1) || ((canBeServiced==1) && (analogRead(A4)>450) && ((lastFruit-(fruitQuant[0]+fruitQuant[1]+fruitQuant[2]+fruitQuant[3]+fruitQuant[4]))>0)))
+
+    if((startedService==1) || (analogRead(A4)>450) && ((canBeServiced==1) && ((lastFruit-(fruitQuant[0]+fruitQuant[1]+fruitQuant[2]+fruitQuant[3]+fruitQuant[4]))>0)))
     {
       //Serial.println(analogRead(A4));
       if(analogRead(A4)>450)canBeServiced=0;
@@ -144,7 +146,7 @@ void loop() {
           fruitQuant[sort-65]++;
         else
           fruitQuant[4]++;
-          
+
         startedService=0; //Service Ends
         //Serial.print(sort);
         //Serial.println(" serviced...");
@@ -162,7 +164,7 @@ void loop() {
         setGrade('E');
       nextToBeDeleted++;
     }
-    
+
     if((millis()%60000) < 5)  //After every 1 minute, accounting for a 5 millisecond program runtime to get to this if statement
     {
       Serial.print("Quant:");
