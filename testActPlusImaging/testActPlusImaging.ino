@@ -11,7 +11,8 @@
  *
  */
 
-unsigned long t=0, del=2000, setTime[50];
+unsigned long t=0, setTime[50];
+signed long del=2000;
 int defDelayTime=6000,mechanismDelay = 200;
 int fruitQuant[5]={0,0,0,0,0}; //Holds number of 'A', 'B', 'C', 'D', 'Undefined'
 char fruitList[50];
@@ -20,7 +21,7 @@ int lastFruit=0, nextToBeSet=0, nextToBeDeleted=0;
 int canBeServiced=1, startedService=0;
 char sort;
 
-int photoElec=0;
+int photoElec=0, quantDel=0;
 
 
 void setGrade(char s)
@@ -103,23 +104,23 @@ void setup() {
 }
 
 void loop() {
+    
     if(Serial.available()>0)
     {
       fruitList[lastFruit++]=Serial.read();
       if(lastFruit==50)lastFruit=0;
     }
 
-    if(analogRead(A1)<50 && photoElec==1)//A10 is the PhotoElectric Sensor
+    if(analogRead(A1)<10 && photoElec==1 && millis()%100==0)//A10 is the PhotoElectric Sensor
     {
-      delay(2);
-      if(analogRead(A1)<50)
+      delay(10);
+      if(analogRead(A1)<10)
       {
         photoElec=0;
-        Serial.println("PEendMark");//Tells the Python Code that PhotoElectric sensor was triggered before and has just switched off.
+        Serial.println("PEendMark"); //Tells the Python Code that PhotoElectric sensor was triggered before and has just switched off.
       }
     }
-
-    if(analogRead(A1)>50)
+    if(analogRead(A1)>10)
     {
       photoElec=1;
     }
@@ -142,6 +143,7 @@ void loop() {
       {
         sort = fruitList[(fruitQuant[0]+fruitQuant[1]+fruitQuant[2]+fruitQuant[3]+fruitQuant[4])%50];
         setTime[(fruitQuant[0]+fruitQuant[1]+fruitQuant[2]+fruitQuant[3]+fruitQuant[4])%50] = (millis()+t);
+        
         if(sort=='A' || sort=='B' || sort=='C' || sort=='D')
           fruitQuant[sort-65]++;
         else
@@ -160,12 +162,17 @@ void loop() {
     }
     if((nextToBeDeleted<nextToBeSet) && ((signed long)(millis() - setTime[nextToBeDeleted]) > del))
     {
+      //Serial.println((signed long)(millis() - setTime[nextToBeDeleted]));
       if(fruitList[nextToBeDeleted+1]!=fruitList[nextToBeDeleted])
         setGrade('E');
       nextToBeDeleted++;
     }
 
-    if((millis()%60000) < 5)  //After every 1 minute, accounting for a 5 millisecond program runtime to get to this if statement
+    if(quantDel==1 && millis()%1000==0)
+    {
+      quantDel=0;
+    }
+    if(((millis()%60000) < 5) && quantDel==0)  //After every 1 minute, accounting for a 5 millisecond program runtime to get to this if statement
     {
       Serial.print("Quant:");
       Serial.print(fruitQuant[0]);
@@ -178,5 +185,6 @@ void loop() {
       Serial.print(":");
       Serial.print(fruitQuant[4]);
       Serial.println();
+      quantDel=1;
     }
 }

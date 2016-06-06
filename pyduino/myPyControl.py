@@ -27,15 +27,15 @@ ardDir = input("Enter the directory of your board : ")
 bRate = input("Enter the baud rate for serial comm. : ")
 
 fruitSorter = serial.Serial(port=ardDir, baudrate=bRate, timeout=5)
-
+time.sleep(5);
 while True:
-	print("Waiting for line...")
+	#print("Waiting for line...")
 	line_received = fruitSorter.readline().decode().strip()
-	print(line_received)
+	#print(line_received)
 	if('P' in line_received):
-		time.sleep(seconds=ImagerDelay)
+		time.sleep(ImagerDelay)
 		# Camera 1 is the external webcam
-		camera_port = 1
+		camera_port = 0
 		#Number of frames to throw away while the camera adjusts to light levels
 		ramp_frames = 30
 		camera = cv2.VideoCapture(camera_port)
@@ -62,15 +62,20 @@ while True:
 		#image Processing ends
 
 		if(A[0]<=rad<=A[1]):
-			fruitSorter.write("A")
+			fruitSorter.write('A'.encode())
+			print("A Reported")
 		elif(B[0]<=rad<=B[1]):
-			fruitSorter.write("B")
+			fruitSorter.write('B'.encode())
+			print("B Reported")
 		elif(C[0]<=rad<=C[1]):
-			fruitSorter.write("C")
+			fruitSorter.write('C'.encode())
+			print("C Reported")
 		elif(D[0]<=rad<=D[1]):
-			fruitSorter.write("D")
+			fruitSorter.write('D'.encode())
+			print("D Reported")
 		else:
-			fruitSorter.write("E")
+			fruitSorter.write('E'.encode())
+			print("E Reported")
 	elif('Quant' in line_received):
 		Quants = line_received.split(':')
 		print("The Quantities of fruits sorted are : ")
@@ -80,4 +85,5 @@ while True:
 		print("D : " + Quants[4])
 		print("Unknown : " + Quants[5])
 	else:
-		print("Unknown Line")
+		#print("Unknown Line")
+		pass
