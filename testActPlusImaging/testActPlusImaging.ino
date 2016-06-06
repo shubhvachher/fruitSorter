@@ -104,7 +104,7 @@ void setup() {
 }
 
 void loop() {
-    
+
     if(Serial.available()>0)
     {
       fruitList[lastFruit++]=Serial.read();
@@ -143,7 +143,7 @@ void loop() {
       {
         sort = fruitList[(fruitQuant[0]+fruitQuant[1]+fruitQuant[2]+fruitQuant[3]+fruitQuant[4])%50];
         setTime[(fruitQuant[0]+fruitQuant[1]+fruitQuant[2]+fruitQuant[3]+fruitQuant[4])%50] = (millis()+t);
-        
+
         if(sort=='A' || sort=='B' || sort=='C' || sort=='D')
           fruitQuant[sort-65]++;
         else
