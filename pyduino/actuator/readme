@@ -1,0 +1,4 @@
+Vanilla Actuator code that is not suitable on boards that have memory restrictions.
+Each fruit has its own class variable and 50 Memory locations.
+The code is easy to understand though and its functionality is implimented in an optimised way in testAct.ino file
+There is no direct imaging capability in this code.

@@ -1,6 +1,6 @@
 Fruit is to be photographed
-	Sensor analog data to be compared and a 'click' message to be sent to python
-	Image taking needs to be done in python
+	Sensor analog data is read and a message is sent to python
+	Image taking is done in python with an attached webcam
 	Image processing needs to be done in python
 		Final Grade needs to be decided
 	Python needs to send 'fruitData' back to arduino in the form of 'A' 'B' 'C' 'D' 'E'(default)

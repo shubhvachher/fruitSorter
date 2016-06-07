@@ -117,7 +117,7 @@ void loop() {
       if(analogRead(A1)<10)
       {
         photoElec=0;
-        Serial.println("PEendMark"); //Tells the Python Code that PhotoElectric sensor was triggered before and has just switched off.
+        Serial.println("PESMark"); //Tells the Python Code that PhotoElectric sensor was triggered before and has just switched off.
       }
     }
     if(analogRead(A1)>10)

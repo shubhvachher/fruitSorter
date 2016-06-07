@@ -37,7 +37,7 @@ while True:
 		# Camera 1 is the external webcam
 		camera_port = 0
 		#Number of frames to throw away while the camera adjusts to light levels
-		ramp_frames = 30
+		ramp_frames = 10
 		camera = cv2.VideoCapture(camera_port)
 		for i in range(ramp_frames):
 			temp = camera.read()
