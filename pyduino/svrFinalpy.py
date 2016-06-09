@@ -21,13 +21,15 @@ time.sleep(5); #To allow serial connection to stabilise.
 #Funtion Definitions
 def takeImage(camPort = 1, ramp_frames = 30, verbosity = 0):
 	"""Returns an image taken from the camera at camPort"""
-	camera = cv2.VideoCapture(camPort)
+	#camera = cv2.VideoCapture(camPort)
 	for i in range(ramp_frames):
 		temp = camera.read()
 	if verbosity>0:
 		print("Taking image now.")
 	retval, image = camera.read()
-	del(camera)
+	cv2.imshow("image",image)
+	cv2.waitKey(30)
+	#del(camera)
 	return image
 
 def sizeProcessing(image, A=[50, 59.5], B=[60, 62], C=[62.5, 64.5], D=[65, 75], convFactor=2, thresh1=10, thresh2=245):
@@ -53,7 +55,11 @@ def sizeProcessing(image, A=[50, 59.5], B=[60, 62], C=[62.5, 64.5], D=[65, 75], 
 
 	pointForm=np.transpose(pointForm)
 	pointForm = np.array(pointForm)
-	center,rad=cv2.minEnclosingCircle(pointForm)
+	if(len(pointForm)!=0):
+		center,rad=cv2.minEnclosingCircle(pointForm)
+	else:
+		center =(1,2)
+		rad=60
 	center = tuple(np.roll(center,1))
 	#image Processing ends
 
@@ -71,23 +77,31 @@ def sizeProcessing(image, A=[50, 59.5], B=[60, 62], C=[62.5, 64.5], D=[65, 75], 
 #Main Program Starts
 ImagerDelay=0.1
 mmm=0
+camera = cv2.VideoCapture(0)
+print("Sleeping now")
+time.sleep(5)
 dump = fruitSorter.flushInput()
 while True:
 	print("TOP")
-	print(time.time()-mmm)
 	mmm=time.time()
 	line_received = fruitSorter.readline().decode().strip()
-	print(time.time()-mmm)
-	mmm=time.time()
+	print("Line Waiting time is ",time.time()-mmm)
+	#mmm=time.time()
 	#print("Printing line now...")
 	print(line_received)
 	if('P' in line_received):
 		time.sleep(ImagerDelay)#To wait for the fruit to come under the camera
 		#print("Taking Image Started...")
-		image = takeImage(camPort=1,ramp_frames=10,verbosity=1)
-		print("Processing Starts...")
+		aaa = time.time()
+		image = takeImage(camPort=0,ramp_frames=1,verbosity=1)
+		print("Image taking time is", time.time()-aaa)
+		#print("Processing Starts...")
+		aaa=time.time()
 		(grade, rad) = sizeProcessing(image)
+		print("Processing time is ", time.time()-aaa)
+		#aaa=time.time()
 		fruitSorter.write(grade.encode())
+		#print("Writing time is ",time.time()-aaa)
 		if(grade=='A'):
 			print("A Reported")
 		elif(grade=='B'):
@@ -112,3 +126,4 @@ while True:
 	else:
 		#print("Unknown Line")
 		pass
+	print("Total time in loop is : ",time.time()-mmm)
