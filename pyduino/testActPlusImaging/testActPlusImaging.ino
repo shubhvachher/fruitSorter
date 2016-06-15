@@ -14,7 +14,7 @@
 unsigned long t=0, setTime[50];
 signed long del=2000;
 int defDelayTime=6000,mechanismDelay = 200;
-int fruitQuant[5]={0,0,0,0,0}; //Holds number of 'A', 'B', 'C', 'D', 'Undefined'
+int fruitQuant[4]={0,0,0,0}; //Holds number of 'A', 'B', 'C', 'Undefined'
 char fruitList[50];
 
 int lastFruit=0, nextToBeSet=0, nextToBeDeleted=0;
@@ -61,8 +61,8 @@ void setGrade(char s)
             digitalWrite(28,HIGH);
             digitalWrite(29,LOW);
             break;
-        case 'D':   //West
-            //Serial.println("Grade D");
+        case 'D':   //West ; Undefined Fruit
+            //Serial.println("Undefined Fruit");
             digitalWrite(22,LOW);
             digitalWrite(23,HIGH);
             digitalWrite(24,LOW);
@@ -72,8 +72,8 @@ void setGrade(char s)
             digitalWrite(28,LOW);
             digitalWrite(29,HIGH);
             break;
-        default:   //stable
-            //Serial.println("Stable");
+        default:   //Mid-Position
+            //Serial.println("Mid_Position");
             digitalWrite(22,LOW);
             digitalWrite(23,HIGH);
             digitalWrite(24,LOW);
@@ -100,7 +100,7 @@ void setup() {
     pinMode(27,OUTPUT);
     pinMode(28,OUTPUT);
     pinMode(29,OUTPUT);
-    setGrade('E');  //To set it to stable position. Grade 'E' activates default in setGrade()
+    setGrade('E');  //To set it to mid position. Grade 'E' activates default clause in setGrade() function
 }
 
 void loop() {
@@ -111,43 +111,43 @@ void loop() {
       if(lastFruit==50)lastFruit=0;
     }
 
-    if(analogRead(A1)<10 && photoElec==1 && millis()%100==0)//A10 is the PhotoElectric Sensor
+    if(analogRead(A1)<90 && photoElec==1 && millis()%100==0)//A1 is the PhotoElectric Sensor
     {
       delay(10);
-      if(analogRead(A1)<10)
+      if(analogRead(A1)<90)
       {
         photoElec=0;
         Serial.println("PESMark"); //Tells the Python Code that PhotoElectric sensor was triggered before and has just switched off.
       }
     }
-    if(analogRead(A1)>10)
+    if(analogRead(A1)>90)
     {
       photoElec=1;
     }
 
-    if(analogRead(A4)<450 && canBeServiced==0)//A4 is the IR Sensor
+    if(analogRead(A4)<450 && canBeServiced==0)//A4 is the Prox Sensor
     {
-      delay(2);
+      delay(10);
       if(analogRead(A4)<450)
       {
         canBeServiced=1;
       }
     }
 
-    if((startedService==1) || (analogRead(A4)>450) && ((canBeServiced==1) && ((lastFruit-(fruitQuant[0]+fruitQuant[1]+fruitQuant[2]+fruitQuant[3]+fruitQuant[4]))>0)))
+    if((startedService==1) || (analogRead(A4)>450) && ((canBeServiced==1) && ((lastFruit-(fruitQuant[0]+fruitQuant[1]+fruitQuant[2]+fruitQuant[3]))>0)))
     {
       //Serial.println(analogRead(A4));
       if(analogRead(A4)>450)canBeServiced=0;
       if(startedService==0)startedService=1;
       if(startedService==1 && canBeServiced==1)
       {
-        sort = fruitList[(fruitQuant[0]+fruitQuant[1]+fruitQuant[2]+fruitQuant[3]+fruitQuant[4])%50];
-        setTime[(fruitQuant[0]+fruitQuant[1]+fruitQuant[2]+fruitQuant[3]+fruitQuant[4])%50] = (millis()+t);
+        sort = fruitList[(fruitQuant[0]+fruitQuant[1]+fruitQuant[2]+fruitQuant[3])%50];
+        setTime[(fruitQuant[0]+fruitQuant[1]+fruitQuant[2]+fruitQuant[3])%50] = (millis()+t);
 
-        if(sort=='A' || sort=='B' || sort=='C' || sort=='D')
+        if(sort=='A' || sort=='B' || sort=='C')
           fruitQuant[sort-65]++;
         else
-          fruitQuant[4]++;
+          fruitQuant[3]++;
 
         startedService=0; //Service Ends
         //Serial.print(sort);
@@ -155,7 +155,7 @@ void loop() {
       }
     }
 
-    if(((setTime[nextToBeSet] - millis()) < mechanismDelay) && nextToBeSet<((fruitQuant[0]+fruitQuant[1]+fruitQuant[2]+fruitQuant[3]+fruitQuant[4])%50))
+    if(((setTime[nextToBeSet] - millis()) < mechanismDelay) && nextToBeSet<((fruitQuant[0]+fruitQuant[1]+fruitQuant[2]+fruitQuant[3])%50))
     {
       setGrade(fruitList[nextToBeSet]);
       nextToBeSet++;
@@ -164,7 +164,7 @@ void loop() {
     {
       //Serial.println((signed long)(millis() - setTime[nextToBeDeleted]));
       if(fruitList[nextToBeDeleted+1]!=fruitList[nextToBeDeleted])
-        setGrade('E');
+        setGrade('E');//To set it to mid position. Grade 'E' activates default clause in setGrade() function
       nextToBeDeleted++;
     }
 
@@ -182,8 +182,6 @@ void loop() {
       Serial.print(fruitQuant[2]);
       Serial.print(":");
       Serial.print(fruitQuant[3]);
-      Serial.print(":");
-      Serial.print(fruitQuant[4]);
       Serial.println();
       quantDel=1;
     }
