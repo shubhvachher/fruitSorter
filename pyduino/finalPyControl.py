@@ -1,10 +1,10 @@
 """
 Computer Control of Online Fruit Sorting System
 ===============================================
-Controller that acts to take inputs from various devices through an arduino. Act on the inputs in the form of image taking.
-Processes the image taken and grades the fruit in the image based on set criteria.
-Results are sent back to the Arduino board for handling of the sorting table positions.
-See https://github.com/shubhvachher/fruitSorter for the project.
+Controller that acts to take inputs from PhotoElectric Sensor through an Arduino; Take an image when the trigger arives; Process the image to get the grade of the imaged fruit; Send the grade back to the Arduino.
+
+Processes the image taken and grades the fruit in the image based on criteria that need to be set.
+See https://github.com/shubhvachher/fruitSorter for the complete project.
 """
 import serial
 import time
@@ -19,27 +19,30 @@ fruitSorter = serial.Serial(port=ardDir, baudrate=bRate, timeout=5)
 time.sleep(5); #To allow serial connection to stabilise.
 
 #Funtion Definitions
-def takeImage(camPort = 1, ramp_frames = 30, verbosity = 0):
+def takeImage(ramp_frames = 30, verbosity = 0, camPort = None):
 	"""Returns an image taken from the camera at camPort"""
-	camera = cv2.VideoCapture(camPort)
+	if(camPort):
+		camera = cv2.VideoCapture(camPort)
 	for i in range(ramp_frames):
 		temp = camera.read()
 	if verbosity>0:
 		print("Taking image now.")
 	retval, image = camera.read()
-	del(camera)
+	cv2.imshow("image",image)
+	cv2.waitKey(30)
+	if(camPort):
+		del(camera)
 	return image
 
-def sizeProcessing(image, A=[50, 59.5], B=[60, 62], C=[62.5, 64.5], D=[65, 75], convFactor=2, thresh1=10, thresh2=245):
+def sizeProcessing(image, A=[50, 59.5], B=[60, 62], C=[62.5, 64.5], convFactor=2, thresh1=10, thresh2=245):
 	"""
 	Returns grade of image based on its size(diameter) as well as fruit radius.
-	Grade sizes are entered in A,B,C,D in list form.
+	Grade sizes are entered in A,B,C in list form. If no match then D(Unknown) is returned.
 	convFactor is the factor the list's numbers are multiplied with to convert their dimensions to pixels.
 	"""
 	A = A*convFactor
 	B = B*convFactor
 	C = C*convFactor
-	D = D*convFactor
 
 	#image Processing starts
 	image_bw = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -53,7 +56,11 @@ def sizeProcessing(image, A=[50, 59.5], B=[60, 62], C=[62.5, 64.5], D=[65, 75], 
 
 	pointForm=np.transpose(pointForm)
 	pointForm = np.array(pointForm)
-	center,rad=cv2.minEnclosingCircle(pointForm)
+	if(len(pointForm)!=0):
+		center,rad=cv2.minEnclosingCircle(pointForm)
+	else:
+		center =(1,2)
+		rad=60
 	center = tuple(np.roll(center,1))
 	#image Processing ends
 
@@ -63,31 +70,37 @@ def sizeProcessing(image, A=[50, 59.5], B=[60, 62], C=[62.5, 64.5], D=[65, 75], 
 		return ('B',rad)
 	elif(C[0]<=rad<=C[1]):
 		return ('C',rad)
-	elif(D[0]<=rad<=D[1]):
-		return ('D',rad)
 	else:
-		return ('E',rad)
+		return ('D',rad)
 
 #Main Program Starts
 ImagerDelay=0.1
 mmm=0
+camera = cv2.VideoCapture(0)
+print("Sleeping now")
+time.sleep(5)
 dump = fruitSorter.flushInput()
 while True:
 	print("TOP")
-	print(time.time()-mmm)
 	mmm=time.time()
 	line_received = fruitSorter.readline().decode().strip()
-	print(time.time()-mmm)
-	mmm=time.time()
+	print("Line Waiting time is ",time.time()-mmm)
+	#mmm=time.time()
 	#print("Printing line now...")
 	print(line_received)
 	if('P' in line_received):
 		time.sleep(ImagerDelay)#To wait for the fruit to come under the camera
 		#print("Taking Image Started...")
-		image = takeImage(camPort=1,ramp_frames=10,verbosity=1)
-		print("Processing Starts...")
+		aaa = time.time()
+		image = takeImage(camPort=0,ramp_frames=1,verbosity=1)
+		print("Image taking time is", time.time()-aaa)
+		#print("Processing Starts...")
+		aaa=time.time()
 		(grade, rad) = sizeProcessing(image)
+		print("Processing time is ", time.time()-aaa)
+		#aaa=time.time()
 		fruitSorter.write(grade.encode())
+		#print("Writing time is ",time.time()-aaa)
 		if(grade=='A'):
 			print("A Reported")
 		elif(grade=='B'):
@@ -96,19 +109,18 @@ while True:
 			print("C Reported")
 		elif(grade=='D'):
 			print("D Reported")
-		elif(grade=='E'):
-			print("E Reported")
 		else:
 			print("ERROR! Something went wrong.")
+			print(rad, grade)
 	elif('Quant' in line_received):
 		Quants = line_received.split(':')
 		print("The Quantities of fruits sorted are : ")
 		print("A : " + Quants[1])
 		print("B : " + Quants[2])
 		print("C : " + Quants[3])
-		print("D : " + Quants[4])
 		print()
-		print("Unknown : " + Quants[5])
+		print("Unknown : " + Quants[4])
 	else:
 		#print("Unknown Line")
 		pass
+	print("Total time in loop is : ",time.time()-mmm)
