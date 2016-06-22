@@ -102,7 +102,7 @@ void setup() {
     pinMode(29,OUTPUT);
     setGrade('E');  //To set it to mid position. Grade 'E' activates default clause in setGrade() function
 }
-
+int track=1;
 void loop() {
 
     if(Serial.available()>0)
@@ -117,11 +117,16 @@ void loop() {
       if(analogRead(A1)<90)
       {
         photoElec=0;
-        Serial.println("PESMark"); //Tells the Python Code that PhotoElectric sensor was triggered before and has just switched off.
+        Serial.print(track);
+        track+=1;
+        Serial.print("PESMark"); //Tells the Python Code that PhotoElectric sensor was triggered before and has just switched off.
+        Serial.println(millis());
       }
     }
+    //Serial.println(analogRead(A1));
     if(analogRead(A1)>90)
     {
+      //Serial.println(analogRead(A1));
       photoElec=1;
     }
 
