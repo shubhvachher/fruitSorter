@@ -13,7 +13,7 @@
 
 unsigned long t=0, setTime[50];
 signed long del=2000;
-int defDelayTime=6000,mechanismDelay = 200;
+int defDelayTime=2500,mechanismDelay = 200;
 int fruitQuant[4]={0,0,0,0}; //Holds number of 'A', 'B', 'C', 'Undefined'
 char fruitList[50];
 
@@ -102,7 +102,7 @@ void setup() {
     pinMode(29,OUTPUT);
     setGrade('E');  //To set it to mid position. Grade 'E' activates default clause in setGrade() function
 }
-int track=1;
+
 void loop() {
 
     if(Serial.available()>0)
@@ -117,10 +117,8 @@ void loop() {
       if(analogRead(A1)<90)
       {
         photoElec=0;
-        Serial.print(track);
-        track+=1;
-        Serial.print("PESMark"); //Tells the Python Code that PhotoElectric sensor was triggered before and has just switched off.
-        Serial.println(millis());
+        Serial.println("PESMark"); //Tells the Python Code that PhotoElectric sensor was triggered before and has just switched off.
+        //Serial.println(millis());
       }
     }
     //Serial.println(analogRead(A1));
@@ -148,6 +146,8 @@ void loop() {
       {
         sort = fruitList[(fruitQuant[0]+fruitQuant[1]+fruitQuant[2]+fruitQuant[3])%50];
         setTime[(fruitQuant[0]+fruitQuant[1]+fruitQuant[2]+fruitQuant[3])%50] = (millis()+t);
+        Serial.println(millis());
+        Serial.println(t);
 
         if(sort=='A' || sort=='B' || sort=='C')
           fruitQuant[sort-65]++;
@@ -155,13 +155,15 @@ void loop() {
           fruitQuant[3]++;
 
         startedService=0; //Service Ends
-        //Serial.print(sort);
-        //Serial.println(" serviced...");
+        Serial.print(sort);
+        Serial.println(" serviced...");
       }
     }
 
     if(((setTime[nextToBeSet] - millis()) < mechanismDelay) && nextToBeSet<((fruitQuant[0]+fruitQuant[1]+fruitQuant[2]+fruitQuant[3])%50))
     {
+      //Serial.println(setTime[nextToBeSet]);
+      //Serial.println(millis());
       setGrade(fruitList[nextToBeSet]);
       nextToBeSet++;
     }
