@@ -111,24 +111,24 @@ void loop() {
       if(lastFruit==50)lastFruit=0;
     }
 
-    if(analogRead(A1)<90 && photoElec==1 && millis()%100==0)//A1 is the PhotoElectric Sensor
+    if(analogRead(A1)<450 && photoElec==1 && millis()%100==0)//A1 is the Prox1 Sensor
     {
       delay(10);
-      if(analogRead(A1)<90)
+      if(analogRead(A1)<450)
       {
         photoElec=0;
-        Serial.println("PESMark"); //Tells the Python Code that PhotoElectric sensor was triggered before and has just switched off.
+        Serial.println("ProxMark"); //Tells the Python Code that Proximity sensor 1 was triggered before and has just switched off.
         //Serial.println(millis());
       }
     }
     //Serial.println(analogRead(A1));
-    if(analogRead(A1)>90)
+    if(analogRead(A1)>450)
     {
       //Serial.println(analogRead(A1));
       photoElec=1;
     }
 
-    if(analogRead(A4)<450 && canBeServiced==0)//A4 is the Prox Sensor
+    if(analogRead(A4)<450 && canBeServiced==0)//A4 is the Prox2 Sensor
     {
       delay(10);
       if(analogRead(A4)<450)
@@ -146,8 +146,8 @@ void loop() {
       {
         sort = fruitList[(fruitQuant[0]+fruitQuant[1]+fruitQuant[2]+fruitQuant[3])%50];
         setTime[(fruitQuant[0]+fruitQuant[1]+fruitQuant[2]+fruitQuant[3])%50] = (millis()+t);
-        Serial.println(millis());
-        Serial.println(t);
+        //Serial.println(millis());
+        //Serial.println(t);
 
         if(sort=='A' || sort=='B' || sort=='C')
           fruitQuant[sort-65]++;
