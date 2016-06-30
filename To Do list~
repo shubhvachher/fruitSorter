@@ -1,9 +1,3 @@
-Fruit is to be photographed
-	Sensor analog data is read and a message is sent to python
-	Image taking is done in python with an attached webcam
-	Image processing needs to be done in python
-		Final Grade needs to be decided
-	Python needs to send 'fruitData' back to arduino in the form of 'A' 'B' 'C' 'D' 'E'(default)
-Arduino once got the data needs to wait for IR sensor
-Then the platform needs to be set at the right moment
-Then needs to be reset for the next fruit(depending on fruit grade)
+Reduce size of hole above platform.
+Improve image processing in order to correctly grade disfigured fruits.
+
