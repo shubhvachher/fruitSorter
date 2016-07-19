@@ -1,6 +1,4 @@
-# fruitSorter
 Part of the PS1 work @ CEERI, Chennai
-<<<<<<< HEAD
 
 Help test run of project:
 
@@ -13,5 +11,3 @@ Automated Fruit Grading and Sorting :
 Automated Weighing :
 	Go into the directory : /AutomatedWeighing/shubhWeighing
 	The file shubhWeighing.ino is to be run on the arduino connected to the wieghing machine used in this project. Look at the code for further help with regards to the weighing machine to select.
-=======
->>>>>>> origin/master
