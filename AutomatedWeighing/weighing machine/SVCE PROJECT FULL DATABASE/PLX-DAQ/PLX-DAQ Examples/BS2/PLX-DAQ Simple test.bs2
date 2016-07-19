@@ -1,0 +1,76 @@
+'{$STAMP BS2}
+'{$PBASIC 2.5}
+'***************** Simple PLX-DAQ Example *****************
+' Simple PLX-DAQ routine for data.
+' Program will send data on serial port to be
+' accepted and placed into an Excel worksheet.
+
+' This program also demonstrates reading the current ROW from Excel,
+' and starting over again once it meets to exceeds 300.
+
+' Check "Reset Stamp on Connect" to catch configuration data.
+
+' January, 2007
+' By Martin Hebel
+' SelmaWare Solutions - www.selmaware.com
+' Southern Illinois University Carbondale - www.siu.edu/~isat/est
+
+'***************** PLX-DAQ data structures Used ****************
+' SEROUT   Sends serial data from programming port (P16)
+'          [ ] defines data to be sent.
+
+' PLX-DAQ directives used:
+' DATA          Places data into the next row of Excel spreadsheet
+'               Up to 26 comma-separated values may be stored.
+'               Each value following "DATA," must be separated by comma-strings ","
+'               DATA,val1,val2,val3...Val26
+'               DATA,TIME, decimal value of X, Signed-Decimal value of X
+
+' TIME          Replaced by PLX-DAQ with real system time (DATE may also be used)
+'               in DATA directive.  Column cells should be formatted for time.
+
+' TIMER         Replaced by PLX-DAQ with the seconds since last may also be used
+'               to show time since last RESETTIMER.
+'               Column should NOT be formatted for 'Time'.
+
+' LABEL         Places headings on the columns for rows A-J using up to
+'               10 comma-separated labels.
+'               LABEL,label1,label2,...label10
+
+' CLEARSHEET    Clears columns A-J, rows 2 and on. (labels remain).
+' RESETTIMER    Resets the timer to 0.
+'
+' ROW,GET       Requests the last row data went into.
+'               Accept returning data with SERIN pin, baud,[dec variable]
+
+' ROW,SET,val   Sets the row the next data set will use.
+'**************************************************************
+
+X       VAR    Byte       'Variable to represent data
+sPin    CON    16         'Serial Pin - P16, Programming port
+Baud    CON    84         'Baud mode for a rate of 9600, 8-N-1
+                          'BS2P, BS2SX use 240 for 9600, 8-N-1
+Row     VAR    Word       'Variable to hold row data
+'**************************************************************
+
+PAUSE 1000                             'Allow data communications to stabilize
+SEROUT sPin,Baud,[CR]                  'Send a lone CR to ensure PLX-DAQ buffer is ready
+
+        'Label 3 columns with TIME, X, and SIN X
+SEROUT sPin,Baud,[CR,"LABEL,Time,Timer,X,SIN X",CR]
+SEROUT sPin,Baud,["CLEARDATA",CR]      'Clear all data columns (A-J) in Excel
+SEROUT sPin,Baud,["RESETTIMER",CR]     'Reset Timer to 0
+
+DO
+  FOR X = 0 TO 255                     'Count from 0 to 255
+     ' Send String with data for Excel
+     SEROUT sPin,Baud,["DATA,TIME,TIMER,", DEC X, ",", SDEC SIN X,CR]
+     ' Request last row of data
+     SEROUT sPin,Baud,["ROW,GET",CR]
+     ' Accept returning data and store into Row with 200mS timeout
+     SERIN sPin, Baud,200,TimeOut,[DEC Row]
+     ' If Row is or exceeds 300, set row back to 2
+     IF row >= 300 THEN SEROUT sPin,Baud,["ROW,SET,2",CR]
+     Timeout:
+  NEXT
+LOOP

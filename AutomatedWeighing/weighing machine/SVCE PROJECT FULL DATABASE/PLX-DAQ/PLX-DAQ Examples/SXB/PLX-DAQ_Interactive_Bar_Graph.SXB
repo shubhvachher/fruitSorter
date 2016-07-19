@@ -1,0 +1,212 @@
+' -------------------------------------------------------------------------
+' Program Description
+' -------------------------------------------------------------------------
+'************* Interactive Bar Graph PLX-DAQ Example **************
+' Program will send data on to be placed in 2 cells in PLX-DAQ
+' Which will be graphed as bar graphs.
+' Use the "Inteactive Bar Graph" sheet in PLX-DAQ.
+' Change the "Delay" time in Excel to be read by the BASIC Stamp
+' Check "Reset Stamp on Connect" to catch configuration data.
+' Updated: January, 2007
+' By Martin Hebel / SelmaWare Solutions / SIUC - EST
+'
+' Converted from PBASIC to SX/B By Terry Hitt / Hitt Consulting Jan 15, 2007
+'  Values sent are not "real" SIN/COS values, they are simulated since SX/B does not have the SIN/COS functions
+'  Tested on the Parallax Professional Development Board by using the RS-232 DCE port on the PDB.
+'  Connect RA.0 to TX and RA.1 to RX
+
+'***************** PLX-DAQ data structures ****************
+' SEROUT   Sends serial data from programming port (P16)
+'          [ ] defines data to be sent.
+' PLX-DAQ directives used:
+' CELLSET     Sets the specified cell in Excel to the value
+'             number or string.
+'             CELLSET,A2,HELLO
+' CELLGET     Gets the specified cell's vaue in Excel
+'             to be accepted by the BASIC Stamp
+'             CELLGET,D5
+' USER1,LABEL Sets the User1 checkbox in the control to string specified
+'             USER1,LABEL,Check me!
+' USER1,GET   Returns the value of the USER1 checkbox back to the BASIC Stamp
+'             0 = unchecked, 1 = checked
+' USER1,SET   Sets the USER1 check box to checked (1) or unchecked (0)
+'             USER1,SET,0
+'
+'**************************************************************
+' -------------------------------------------------------------------------
+' Device Settings
+' -------------------------------------------------------------------------
+DEVICE SX28, OSCXT2, STACKX, OPTIONX, TURBO
+FREQ 20_000_000 ' Use SX-Key or 20MHz resonator
+
+' -------------------------------------------------------------------------
+' IO Pins
+' -------------------------------------------------------------------------
+SOutPin   PIN RA.0 OUTPUT    ' Serial data is sent out on pin RA.0
+SInPin    PIN RA.1 INPUT     ' Serial data is received on pin RA.1
+
+' -------------------------------------------------------------------------
+' Constants
+' -------------------------------------------------------------------------
+Baud      CON "T9600"        ' Baud rate for communications
+CR        CON 13             ' Value for CR
+
+' -------------------------------------------------------------------------
+' Variables
+' -------------------------------------------------------------------------
+value     VAR Word           ' Data value to send
+direction VAR Word           ' Used to adjust data value
+delay     VAR Word           
+
+char      VAR Byte           ' Used by subroutines
+tempW     VAR Word           ' Used by subroutines
+
+' -------------------------------------------------------------------------
+' Subroutine Declarations
+' -------------------------------------------------------------------------
+SendChar  SUB 1              ' Subroutine to send 1 character
+SendStr   SUB 2              ' Subroutine to send a string
+SendStrCR SUB 2              ' Subroutine to send a string + CR
+SendWord  SUB 2              ' Subroutine to send a word value in ASCII
+RecvWord  FUNC 2             ' Subroutine to receive a word value in ASCII (Returns zero if timeout occurs)
+
+' =========================================================================
+  PROGRAM Start
+' =========================================================================
+
+' -------------------------------------------------------------------------
+' Program Code
+' -------------------------------------------------------------------------
+Start:
+  ' Setup starting data values
+  value = 78
+  direction = 12
+
+  delay = 1000
+  PAUSE 1000                 ' Allow data communications to stabilize
+  SendChar CR                ' Send a lone CR to ensure PLX-DAQ buffer is ready
+' Label and fill in initial values of cells
+  SendStrCR "CELL,SET,A4, Delay (mSec):"
+  SendStrCR "CELL,SET,B4,1000"
+  SendStrCR "CELL,SET,A6, SIN X:"
+  SendStrCR "CELL,SET,A7, COS X:"
+  ' Label USER1 checkbox
+  SendStrCR "USER1,LABEL,Update Delay"
+
+  DO
+    ' Place data in cells for graphing
+    SendStr "CELL,SET,B6,"
+    SendWord value
+    SendChar CR
+    SendStr "CELL,SET,B7,-"
+    value = 156-value
+    SendWord value
+    SendChar CR
+    value = 156-value
+    ' Read USER1 checkbox
+    SendStrCR "USER1,GET"
+    tempW = RecvWord
+    ' If checked, read new delay time
+    IF tempW = 1 THEN
+      SendStrCR "CELL,GET,B4"
+      delay = RecvWord
+      ' Uncheck USER1 box
+      SendStrCR "USER1,SET,0"
+    ENDIF
+    PAUSE delay
+
+    ' Adjust the value
+    value = value + direction
+    IF value > 78 THEN
+      DEC direction
+    ELSE
+      INC direction
+    ENDIF
+
+  LOOP
+END
+
+' -------------------------------------------------------------------------
+' Subroutine Code
+' -------------------------------------------------------------------------
+SendChar: ' Sends a single character
+  char = __PARAM1
+  SEROUT SOutPin, Baud, char
+  RETURN
+
+
+SendStr: ' Sends a string
+  tempW = __WPARAM12
+  DO
+    READINC tempW, char
+    IF char = 0 THEN EXIT
+    SendChar char
+  LOOP
+  RETURN
+
+
+SendStrCR: ' Sends a string followed by a CR
+  tempW = __WPARAM12
+  DO
+    READINC tempW, char
+    IF char = 0 THEN EXIT
+    SendChar char
+  LOOP
+  SendChar CR
+  RETURN
+
+
+SendWord: ' Sends a word value as ASCII
+  tempW = __WPARAM12
+  char = "0"
+  DO
+    IF tempW < 10000 THEN EXIT
+    INC char
+    tempW = tempW - 10000
+  LOOP
+  SendChar char
+  char = "0"
+  DO
+    IF tempW < 1000 THEN EXIT
+    INC char
+    tempW = tempW - 1000
+  LOOP
+  SendChar char
+  char = "0"
+  DO
+    IF tempW < 100 THEN EXIT
+    INC char
+    tempW = tempW - 100
+  LOOP
+  SendChar char
+  char = "0"
+  DO
+    IF tempW < 10 THEN EXIT
+    INC char
+    tempW = tempW - 10
+  LOOP
+  SendChar char
+  char = "0" + tempW_LSB
+  SendChar char
+  RETURN
+
+
+RecvWord:' Receive a ASCII value and returns a word value (Returns zero if time-out occurs)
+  tempW = 0
+  DO
+    SERIN SInPin, Baud, char, 200, RecvWordTimeOut
+    IF char <> " " THEN
+      IF char < "0" THEN EXIT
+      IF char > "9" THEN EXIT
+      tempW = tempW * 10
+      char = char - "0"
+      tempW = tempW + char
+    ENDIF 
+  LOOP
+  GOTO RecvWordOk
+
+RecvWordTimeOut:
+  tempW = 0
+
+RecvWordOk:
+  RETURN tempW
