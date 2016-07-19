@@ -1,0 +1,11 @@
+Trials images are ones taken long back but still valid.
+Tests images are latest ones and so are all the oddly named folders like rampFrames etc.
+with and withoutLight folders are images taken with and without the presence of external lighting conditions, in our case, three tubelights in the room.
+TestFinal4 is the final pictures taken during final runtime.
+If a new system is made then it needs to be tested on all the pictures in this folder, as long as the mechanical system of taking images stays the same. (similar background and therefore similar image proc required)
+
+controlPywithPics is an implimentation of basic image processing with Py control. Look to it and see if it could be useful later (We have made use of the updated svrFinalPyControl in the pyduino folder.)
+
+Image take and save is a system we used to save the images taken from the webcam with complete ease. Learn to use it if you need many images saved from the webcameras in useful formats.
+
+radFinder is the best thing EVER! Use the radFinder.radFinder() function. It is the best we could come up with given our time constraint of 27 days. It is documented well, I hope, but is in no way perfect; it is as close to perfect as we needed. Test the radFinder.radFinder() function on any image in this folder to see the results. TIP: Keep Verbosity = 2. Super Saiyan mode ON.

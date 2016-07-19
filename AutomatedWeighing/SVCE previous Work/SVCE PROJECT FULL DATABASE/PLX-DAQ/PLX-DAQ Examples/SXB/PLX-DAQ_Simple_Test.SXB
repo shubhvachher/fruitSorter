@@ -1,0 +1,222 @@
+' -------------------------------------------------------------------------
+' Program Description
+' -------------------------------------------------------------------------
+' ***************** Simple PLX-DAQ Example *****************
+' Simple PLX-DAQ routine for data.
+' Program will send data on serial port to be
+' accepted and placed into an Excel worksheet.
+
+' This program also demonstrates reading the current ROW from Excel,
+' and starting over again once it meets to exceeds 300.
+
+' Initial: July, 2002
+' Updated: January, 2007
+' By Martin Hebel / SelmaWare Solutions / SIUC - EST
+'
+' Converted from PBASIC to SX/B By Terry Hitt / Hitt Consulting Jan 15, 2007
+'  Values sent are not "real" SIN values, they are simulated since SX/B does not have the SIN function
+'  Tested on the Parallax Professional Development Board by using the RS-232 DCE port on the PDB.
+'  Connect RA.0 to TX and RA.1 to RX
+
+'***************** PLX-DAQ data structures Used ****************
+' SendChar, SendStr, SendStrCR:  Sends serial data from programming port (RA.0)
+
+' PLX-DAQ directives used:
+' DATA          Places data into the next row of Excel spreadsheet
+'               Up to 26 comma-separated values may be stored.
+'               Each value following "DATA," must be separated by comma-strings ","
+'               DATA,val1,val2,val3...Val26
+'               DATA,TIME, decimal value of X, Signed-Decimal value of X
+
+' TIME          Replaced by PLX-DAQ with real system time (DATE may also be used)
+'               in DATA directive.  Column cells should be formatted for time.
+
+' TIMER         Replaced by PLX-DAQ with the seconds since last may also be used
+'               to show time since last RESETTIMER.
+'               Column should NOT be formatted for 'Time'.
+
+' LABEL         Places headings on the columns for rows A-J using up to
+'               10 comma-separated labels.
+'               LABEL,label1,label2,...label10
+
+' CLEARSHEET    Clears columns A-J, rows 2 and on. (labels remain).
+' RESETTIMER    Resets the timer to 0.
+'
+' ROW,GET       Requests the last row data went into.
+'               Accept returning data with SERIN pin, baud,[dec variable]
+
+' ROW,SET,val   Sets the row the next data set will use.
+'**************************************************************
+
+' -------------------------------------------------------------------------
+' Device Settings
+' -------------------------------------------------------------------------
+DEVICE SX28, OSCXT2, STACKX, OPTIONX, TURBO
+FREQ 20_000_000 ' Use SX-Key or 20MHz resonator
+
+' -------------------------------------------------------------------------
+' IO Pins
+' -------------------------------------------------------------------------
+SOutPin   PIN RA.0 OUTPUT    ' Serial data is sent out on pin RA.0
+SInPin    PIN RA.1 INPUT     ' Serial data is received on pin RA.1
+
+' -------------------------------------------------------------------------
+' Constants
+' -------------------------------------------------------------------------
+Baud      CON "T9600"        ' Baud rate for communications
+CR        CON 13             ' Value for CR
+
+' -------------------------------------------------------------------------
+' Variables
+' -------------------------------------------------------------------------
+x         VAR Word           ' Used to count from 0 to 255
+value     VAR Word           ' Data value to send
+direction VAR Word           ' Used to adjust data value
+
+char      VAR Byte           ' Used by subroutines
+tempW     VAR Word           ' Used by subroutines
+
+' -------------------------------------------------------------------------
+' Subroutine Declarations
+' -------------------------------------------------------------------------
+SendChar  SUB 1              ' Subroutine to send 1 character
+SendStr   SUB 2              ' Subroutine to send a string
+SendStrCR SUB 2              ' Subroutine to send a string + CR
+SendWord  SUB 2              ' Subroutine to send a word value in ASCII
+RecvWord  FUNC 2             ' Subroutine to receive a word value in ASCII (Returns zero if timeout occurs)
+
+' =========================================================================
+  PROGRAM Start
+' =========================================================================
+
+' -------------------------------------------------------------------------
+' Program Code
+' -------------------------------------------------------------------------
+Start:
+  ' Setup starting data values
+  value = 820
+  direction = 40
+
+  PAUSE 1000                 ' Allow data communications to stabilize
+  SendChar CR                ' Send a lone CR to ensure PLX-DAQ buffer is ready
+' Label 3 columns with TIME, X, and SIN X
+  SendChar CR
+  SendStrCR "LABEL,Time,Timer,X,SIN X"
+  SendStrCR "CLEARDATA"        ' Clear all data columns (A-J) in Excel
+  SendStrCR "RESETTIMER"       ' Reset Timer to 0
+  DO
+    FOR x = 0 TO 255         ' Count from 0 to 255
+     ' Send String with data for Excel
+      SendStr "DATA,TIME,TIMER,"
+      SendWord x
+      SendChar ","
+      SendWord value
+      SendChar CR
+
+     ' Request last row of data
+      SendStrCR "ROW,GET"
+
+     ' Accept returning data and store into Row with 200mS timeout
+      tempW = RecvWord
+
+     ' If Row is or exceeds 300, set row back to 2
+      IF tempW >= 300 THEN
+        SendStrCR "ROW,SET,2"
+      ENDIF
+
+      ' Adjust the value
+      value = value + direction
+      IF value > 820 THEN
+        DEC direction
+      ELSE
+        INC direction
+      ENDIF
+
+    NEXT  
+  LOOP
+END
+
+' -------------------------------------------------------------------------
+' Subroutine Code
+' -------------------------------------------------------------------------
+SendChar: ' Sends a single character
+  char = __PARAM1
+  SEROUT SOutPin, Baud, char
+  RETURN
+
+
+SendStr: ' Sends a string
+  tempW = __WPARAM12
+  DO
+    READINC tempW, char
+    IF char = 0 THEN EXIT
+    SendChar char
+  LOOP
+  RETURN
+
+
+SendStrCR: ' Sends a string followed by a CR
+  tempW = __WPARAM12
+  DO
+    READINC tempW, char
+    IF char = 0 THEN EXIT
+    SendChar char
+  LOOP
+  SendChar CR
+  RETURN
+
+
+SendWord: ' Sends a word value as ASCII
+  tempW = __WPARAM12
+  char = "0"
+  DO
+    IF tempW < 10000 THEN EXIT
+    INC char
+    tempW = tempW - 10000
+  LOOP
+  SendChar char
+  char = "0"
+  DO
+    IF tempW < 1000 THEN EXIT
+    INC char
+    tempW = tempW - 1000
+  LOOP
+  SendChar char
+  char = "0"
+  DO
+    IF tempW < 100 THEN EXIT
+    INC char
+    tempW = tempW - 100
+  LOOP
+  SendChar char
+  char = "0"
+  DO
+    IF tempW < 10 THEN EXIT
+    INC char
+    tempW = tempW - 10
+  LOOP
+  SendChar char
+  char = "0" + tempW_LSB
+  SendChar char
+  RETURN
+
+
+RecvWord:' Receive a ASCII value and returns a word value (Returns zero if time-out occurs)
+  tempW = 0
+  DO
+    SERIN SInPin, Baud, char, 200, RecvWordTimeOut
+    IF char <> " " THEN
+      IF char < "0" THEN EXIT
+      IF char > "9" THEN EXIT
+      tempW = tempW * 10
+      char = char - "0"
+      tempW = tempW + char
+    ENDIF 
+  LOOP
+  GOTO RecvWordOk
+
+RecvWordTimeOut:
+  tempW = 0
+
+RecvWordOk:
+  RETURN tempW

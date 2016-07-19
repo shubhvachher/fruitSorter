@@ -1,0 +1,92 @@
+'{$STAMP BS2}
+'{$PBASIC 2.5}
+'************* Interactive Bar Graph PLX-DAQ Example **************
+' Program will send data on to be placed in 2 cells in PLX-DAQ
+' Which will be graphed as bar graphs.
+' Use the "Interactive Bar Graph" sheet in PLX-DAQ.
+
+' Change the "Delay" time in Excel to be read by the BASIC Stamp
+
+' Check "Reset Stamp on Connect" to catch configuration data.
+
+' Updated: January, 2007
+' By Martin Hebel
+' SelmaWare Solutions - www.selmaware.com
+' Southern Illinois University Carbondale - www.siu.edu/~isat/est
+
+'***************** PLX-DAQ data structures ****************
+' SEROUT   Sends serial data from programming port (P16)
+'          [ ] defines data to be sent.
+
+' PLX-DAQ directives used:
+' CELL,SET    Sets the specified cell in Excel to the value
+'             number or string.
+'             CELLSET,A2,HELLO
+
+' CELL,GET    Gets the specified cell's value in Excel
+'             to be accepted by the BASIC Stamp
+'             CELLGET,D5
+
+
+' USER1,LABEL Sets the User1 checkbox in the control to string specified
+'             USER1,LABEL,Check me!
+
+' USER1,GET   Returns the value of the USER1 checkbox back to the BASIC Stamp
+'             0 = unchecked, 1 = checked
+
+' USER1,SET   Sets the USER1 check box to checked (1) or unchecked (0)
+'             USER1,SET,0
+'
+'**************************************************************
+
+X       VAR    Byte       'Variable to represent data
+sPin    CON    16         'Serial Pin - P16, Programming port
+Baud    CON    84         'Baud mode for a rate of 9600, 8-N-1
+                          'BS2P, BS2SX use 240 for 9600, 8-N-1
+
+Delay_Cell_Label      CON    $A4     ' Specify cells (hex values can be used
+SIN_Cell_Label        CON    $A6     '                up to column F)
+COS_Cell_Label        CON    $A7
+Delay_Text            CON    $C4
+
+Delay_Cell            CON    $B4
+SIN_Cell              CON    $B6
+COS_Cell              CON    $B7
+
+Delay                 VAR    Word    ' Holds delay value read from Excel
+chkDelay              VAR    Bit     ' Holds status of USER1 checkbox
+
+'**************************************************************
+Delay = 1000
+PAUSE 1000                             'Allow data communications to stabilize
+SEROUT sPin,Baud,[CR]                  'Send a lone CR to ensure PLX-DAQ buffer is ready
+
+' Label and fill in initial values of cells
+SEROUT sPin,Baud,["CELL,SET,", HEX Delay_Cell_Label,", Delay (mSec):",CR]
+SEROUT sPin,Baud,["CELL,SET,", HEX Delay_Cell,",1000",CR]
+SEROUT sPin,Baud,["CELL,SET,", HEX Delay_Text,",Change value and click 'Update Delay' in control",CR]
+SEROUT sPin,Baud,["CELL,SET,", HEX SIN_Cell_Label,", SIN X",CR]
+SEROUT sPin,Baud,["CELL,SET,", HEX COS_Cell_Label,", COS X",CR]
+
+' Label USER1 checkbox
+SEROUT sPin,Baud,["STORED,LABEL,Update Delay",CR]
+
+DO
+  x = x + 1
+  ' Place data in cells for graphing
+  SEROUT sPin,Baud,["CELL,SET,", HEX SIN_Cell,",", SDEC SIN X,CR]
+  SEROUT sPin,Baud,["CELL,SET,", HEX COS_Cell,",", SDEC COS X,CR]
+
+  ' Read USER1 checkbox
+  SEROUT sPin,Baud,["USER1,GET",CR]
+  SERIN sPin,Baud,50,Timeout,[DEC chkDelay]
+  ' IF checked, read new delay time
+  IF chkDelay = 1 THEN
+    SEROUT sPin,Baud,["CELL,GET,", HEX Delay_Cell,CR ]
+    SERIN sPin,Baud,50,Timeout,[DEC Delay]
+    'Uncheck USER1 box
+    SEROUT sPin,Baud,["USER1,SET,0",CR]
+  ENDIF
+  Timeout:
+  PAUSE Delay
+LOOP
