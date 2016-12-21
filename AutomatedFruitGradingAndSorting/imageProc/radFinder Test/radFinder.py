@@ -68,6 +68,8 @@ def minVarRadius(cont, toShowImg, verbosity=0):
 
 def radFinder(image, verbosity=0):
 	"""Given an image of a fruit, it finds the center of the fruit and its radius."""
+	if(type(image)==str):
+		image = cv2.imread(image)
 	image_bw = cv2.cvtColor(image.copy(), cv2.COLOR_BGR2GRAY)
 	th1 = cv2.adaptiveThreshold(image_bw.copy(), 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2)
 	image_copy = image.copy()
@@ -170,3 +172,5 @@ if __name__=='__main__':
 		allTimes.append(time.time()-aaa)
 		allRadii.append((radius/2.34, f))
 		print(f)
+	print allTimes
+	print allRadii

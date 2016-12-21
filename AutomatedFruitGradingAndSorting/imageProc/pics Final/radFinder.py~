@@ -58,13 +58,15 @@ def minVarRadius(cont, toShowImg, verbosity=0):
 			dx = 1*std*np.sin(np.arctan2((centroid[0]-minRadpt[0]),(centroid[1]-minRadpt[1])))
 			dy = 1*std*np.cos(np.arctan2((centroid[0]-minRadpt[0]),(centroid[1]-minRadpt[1])))
 		counter+=1
-		if(counter>20):
+		if(counter>15):
 			if(verbosity>0):
 				print("Counter Exceeded. Ending with radius ZERO.")
 			return 0,0
 
 def radFinder(image, verbosity=0):
 	"""Given an image of a fruit, it finds the center of the fruit and its radius."""
+	if(type(image)==str):
+		image = cv2.imread(image)
 	image_bw = cv2.cvtColor(image.copy(), cv2.COLOR_BGR2GRAY)
 	th1 = cv2.adaptiveThreshold(image_bw.copy(), 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2)
 	image_copy = image.copy()

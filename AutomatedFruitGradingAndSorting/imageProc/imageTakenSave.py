@@ -16,10 +16,7 @@ def takeNSave(camPort = 1, ramp_frames = 30, verbosity = 0, filename="test"):
 	cv2.destroyAllWindows()
 	if(choice=='y'):
 		cv2.imwrite(filename,image)
-#	choice = input("Take another image : ")
-#	if(choice=='y'):
-#		filename = input("Enter the filename : ")
-#		takeNSave(camPort,ramp_frames,verbosity,filename)
+		
 	choice = input("Replace image : ")
 	if(choice=='y'):
 		print(filename.split('.')[0])

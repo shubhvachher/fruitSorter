@@ -1,0 +1,6 @@
+Arduno is used to weight the fruit and weight of fruit is used as a trigger for computer to capture an image and start processing. Arudino is also used as final basket solinoid actuator.
+
+The weight of incoming fruits is recorded by the arduino, sent across to the computer via serial when a sweetlime weight value comes in.
+The computer sends the final grade of the fruit to the arduino that then actuates the right basket based on readings from a proximity sensor.
+
+See https://github.com/shubhvachher/fruitSorter for the complete project.
