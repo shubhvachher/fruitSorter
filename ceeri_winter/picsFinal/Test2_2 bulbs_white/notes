@@ -1,0 +1,55 @@
+Training logistic regression on all the images gave 
+0.96 accuracy
+{'solver': 'liblinear', 'C': 1.0, 'random_state': None, 'fit_intercept': True, 'dual': False, 'class_weight': None, 'penalty': 'l2', 'multi_class': 'ovr', 'n_jobs': 1, 'verbose': 0, 'max_iter': 100, 'warm_start': False, 'tol': 0.0001, 'intercept_scaling': 1}
+Coefficient: 
+ [[-1.52458638  0.23616555]]
+Intercept: 
+ [-0.01773355]
+
+
+
+
+
+Training on half the data gave
+0.975  accuracy
+{'multi_class': 'ovr', 'class_weight': None, 'intercept_scaling': 1, 'warm_start': False, 'random_state': None, 'C': 1.0, 'tol': 0.0001, 'fit_intercept': True, 'solver': 'liblinear', 'dual': False, 'n_jobs': 1, 'penalty': 'l2', 'verbose': 0, 'max_iter': 100}
+Coefficient: 
+ [[-1.46805798  0.22725326]]
+Intercept: 
+ [-0.01534006]
+
+Test on the remaining half gave accuracy :
+0.942857142857  accuracy
+
+It failed on fruits : F8 predicted wrongly as YELLOW and C8 predicted wrongly as GREEN
+
+
+
+
+
+
+
+Reversing the train and test set gave after train :
+0.942857142857  accuracy
+{'warm_start': False, 'fit_intercept': True, 'intercept_scaling': 1, 'max_iter': 100, 'verbose': 0, 'class_weight': None, 'n_jobs': 1, 'dual': False, 'C': 1.0, 'solver': 'liblinear', 'multi_class': 'ovr', 'penalty': 'l2', 'tol': 0.0001, 'random_state': None}
+Coefficient: 
+ [[-1.20735625  0.18723025]]
+Intercept: 
+ [-0.02563172]
+ 
+ Test on the remaining half gave accuracy :
+ 0.975 accuracy
+ 
+ It failed on fruits : F1 predicted wrongly as YELLOW
+ 
+ 
+ 
+ 
+ 
+ FINALLY used is the test 2 conducted and therefore the values used are :
+ Coefficient: 
+ [[-1.46805798  0.22725326]]
+Intercept: 
+ [-0.01534006]
+ Wrongly classified as GREEN : C8
+ Wrongly classified as YELLOW : F1 F8

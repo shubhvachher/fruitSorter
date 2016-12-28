@@ -1,5 +1,5 @@
 """
-Computer used as a brain to collect and process information based on color and weight of the Sweet Lime on the conveyer and send final command to arduino.
+Computer used as the brain to collect and process information based on color and weight of the Sweet Lime on the conveyer and send final command to arduino.
 
 The weight is recorded by the arduino, sent across to the computer via serial.
 When a weight reading comes in, the computer takes a picture via the USB camera and finds the hue of the Sweet Lime in the image.
@@ -12,6 +12,7 @@ import time
 import cv2
 import numpy as np
 import threading
+import matplotlib.pyplot as plt #Used only with high verbosity
 
 #Setup
 ardDir = input("Enter the directory of your board : ")
@@ -44,64 +45,125 @@ def takeImage(ramp_frames = 30, verbosity = 0, camera = False, filenn = "takeIma
 		del(camera) #Cleanup
 	return image
 
-def colorWeightBasedGrading(threadPrev=None, filenn="TestradBasedGrading", imagerDelay=1.5,camera=False, A=[50, 62.5], B=[62.5, 68.5], C=[68.5, 75], convFactor=2.34):
+
+def hueFinder(image, verbosity=0):
+	"""Given an image of a fruit, it finds the center of the fruit and draws a radius from the center to approximate the hue."""
+	image_bw = cv2.cvtColor(image.copy(), cv2.COLOR_BGR2GRAY)
+	th1 = cv2.adaptiveThreshold(image_bw.copy(), 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2)
+	image_copy = image.copy()
+
+	radMin = 999
+	dpMin =0
+	for dp in range(1,10,1):
+		if(verbosity>1):
+			image = image_copy.copy()
+		circ = cv2.HoughCircles(image_bw.copy(), cv2.HOUGH_GRADIENT, dp, minDist = 400, minRadius=80)
+		if(circ is not None):
+			for c in circ:
+				x,y,r =c[0].astype("int")
+				if(radMin>r and r<200):
+					radMin=r
+					dpMin=dp
+				if(verbosity>1):
+					print(dp)
+					cv2.circle(image,(x,y),r,(0,255,0),2)
+					showImage(image,title=str(dp),waitTime=500)
+		else:
+			if(verbosity>1):
+				print("Helllo",dp)
+	if(verbosity>1):
+		image = image_copy.copy()
+
+	circ = cv2.HoughCircles(image_bw.copy(), cv2.HOUGH_GRADIENT, dpMin, minDist = 400, minRadius=80)
+
+	if(circ is not None):
+		imageHSV = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+		x,y,r = circ[0,0].astype("int")
+		print(radMin)
+		if(radMin>110):
+			radMin=70
+		hues = []
+		values = []
+		imageMasked = np.zeros(imageHSV.shape[:2])
+		for i in range(0,imageHSV.shape[0]):
+			for j in range(0,imageHSV.shape[1]):
+				dx = i-y
+				dy = j-x
+				if (((dx**2)+(dy**2)) <= (radMin-10)**2) and imageHSV[i][j][0]<60 and imageHSV[i][j][0]>23:
+					imageMasked[i][j]=imageHSV[i][j][0]
+					if(imageHSV[i][j][2]<200):
+						hues.append(imageHSV[i][j][0])
+					values.append(imageHSV[i][j][2])
+
+		if(verbosity>0):
+			# showImage(imageMasked, title="Masked Image", waitTime = 5000)
+			plt.imshow(imageMasked)
+			plt.colorbar()
+			plt.show()
+
+		return ("GREEN" if (0.22725*np.mean(values) + (-1.46806)*np.mean(hues))<(-0.01534) else "YELLOW", np.mean(hues), np.mean(values))
+
+	else:
+		cv2.destroyAllWindows()
+		return ("UNKNOWN",-1,-1)
+
+def colorWeightBasedGrading(threadPrev=None, filenn="TestradBasedGrading", imagerDelay=1.5,camera=False, weightGot=0, weightCutoff = 200):
 	"""
-	Catures and returns grade of image based on its fruit size(radius).
-	Grade sizes are entered in A,B,C in list form. If no match then D(Unknown) is returned.
-	convFactor is the factor the A,B,C list's numbers are multiplied with to convert their dimensions to pixels.
+	Catures and returns grade of image based on the fruits weight and color.
+
+	Grades are defined as :
+	Heavy Yellow fruit is grade 'A'
+	Light Yellow fruit, Heavy Green fruit and Heavy Yellow fruit is B
+
+	Heavy or Light is defined via weightCutoff variable
 	"""
 	time.sleep(imagerDelay)
 	aaa = time.time()
 	image = takeImage(ramp_frames=30, verbosity=0, camera = camera, filenn = filenn)
 	#print("Image taking time is", time.time()-aaa)
 	aaa = time.time()
-	A = np.multiply(A,convFactor)
-	B = np.multiply(B,convFactor)
-	C = np.multiply(C,convFactor)
 
-	rad = radFinder(image.copy(),verbosity=0)
+	hueVal = hueFinder(image.copy(),verbosity=0)
+	hue = hueVal[0]
 
-	if(rad!=-convFactor):
-		if(A[0]<=rad<=A[1]):
+	weightGot = "HEAVY" if weightGot>=weightCutoff else "LIGHT"
+
+
+	if(hue!="UNKNOWN"):
+
+		if(weightGot=="HEAVY" and hue=="YELLOW"):
 			grade = 'A'
-		elif(B[0]<=rad<=B[1]):
+		elif(hue=="GREEN" or weightGot=="LIGHT"):
 			grade = 'B'
-		elif(C[0]<=rad<=C[1]):
-			grade = 'C'
 		else:
-			grade = 'D'
+			grade = 'X'
 
 		prevName = "NONE"
 		if(threadPrev):
 			threadPrev.join() #Waits for previous thread to send its grade to the arduino so that the baskets are in sync.
 			#prevName=threadPrev.getName()
 			#print(prevName,"is done")
+
 		fruitSorter.write(grade.encode())
-		cv2.imwrite(str(rad/convFactor)+grade+filenn+".bmp", image)
+		cv2.imwrite(hue+" "+weightGot+" "+grade+" _ "+filenn+".bmp", image)
 		if(grade=='A'):
-			pass
+			# pass
 			print("A Reported",filenn)
 		elif(grade=='B'):
-			pass
+			# pass
 			print("B Reported",filenn)
-		elif(grade=='C'):
-			pass
-			print("C Reported",filenn)
-		elif(grade=='D'):
-			pass
-			print("D Reported",filenn)
 		else:
-			print("ERROR! Something went wrong.",filenn)
+			print("ERROR! Something went wrong. X reported",filenn)
 	else:
 		if(threadPrev):
 			threadPrev.join() #Waits for previous thread to send its grade to the arduino so that the baskets are in sync.
 			#prevName=threadPrev.getName()
 			#print(prevName,"is done")
-		print("ERROR! No fruit DETECTED in this basket",filenn)
-		grade = 'D'
-		print("Sending to D")
+		print("ERROR! hueFinder function returned UNKNOWN hue!",filenn)
+		grade = 'X'
+		print("Sending to X")
 		fruitSorter.write(grade.encode())
-		cv2.imwrite("U"+filenn+".bmp", image)
+		cv2.imwrite(hue+" "+weightGot+" X"+" _ "+filenn+".bmp", image)
 	#if(threadPrev):
 	#	print(prevName,"plus 1 finished in time", time.time()-aaa)
 	#else:
@@ -115,7 +177,8 @@ if __name__ == '__main__':
 	threadPrev=None #Previous Thread
 	threadNow=None #Thread to start now
 
-	imagerDelay=3.2 #Used to fine tune the position of the fruit on the conveyer when image is taken.
+	imagerDelay=1.2 #Used to fine tune the position of the fruit on the conveyer when image is taken.
+	weightCutoff = 200 #Used to decide 
 
 	filenn="0" #Used to store the images taken in the same folder as where the code is run from
 
@@ -142,7 +205,7 @@ if __name__ == '__main__':
 			filenn = str(int(filenn)+1)
 			print(filenn) #Prints name of file where image taken is being saved
 			#print("Processing Starts...")
-			threadNow = threading.Thread(target = radiusBasedGrading, args = (threadPrev,filenn,imagerDelay,camera))
+			threadNow = threading.Thread(target = colorWeightBasedGrading, args = (threadPrev,filenn,imagerDelay,camera,weightGot,weightCutoff))
 			#print("starting Thread",threadNow.getName())
 			threadNow.start()
 			threadPrev = threadNow

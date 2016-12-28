@@ -49,7 +49,7 @@ def hueFinder(image, verbosity=0):
 		imageHSV = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 		x,y,r = circ[0,0].astype("int")
 		print(radMin)
-		if(radMin>100):
+		if(radMin>110):
 			radMin=70
 		hues = []
 		values = []
@@ -70,7 +70,7 @@ def hueFinder(image, verbosity=0):
 			plt.colorbar()
 			plt.show()
 
-		return ("GREEN" if (0.20272*np.mean(values) + (-1.40552)*np.mean(hues))<(-0.02484) else "YELLOW", np.mean(hues), np.mean(values))
+		return ("GREEN" if (0.22725*np.mean(values) + (-1.46806)*np.mean(hues))<(-0.01534) else "YELLOW", np.mean(hues), np.mean(values))
 
 	else:
 		cv2.destroyAllWindows()
@@ -86,19 +86,6 @@ if __name__=='__main__':
 		hueVal = hueFinder(cv2.imread(f),0)
 		allTimes.append(time.time()-aaa)
 		allHue.append((hueVal[0], hueVal[1:], f))
-		# x_train.append(list(hueVal[1:]))
-		# y_train.append(0 if hueVal[0]<(-0.02484) else 1)
 		print(f)
 	print(allTimes)
 	print("\n".join(str(allHue).split('.bmp')))
-
-	# print(x_train , y_train)
-	#
-	# from sklearn import linear_model
-	#
-	# linear = linear_model.LogisticRegression()
-	# linear.fit(x_train, y_train)
-	# print(linear.score(x_train, y_train))
-	# print(linear.get_params())
-	# print('Coefficient: \n', linear.coef_)
-	# print('Intercept: \n', linear.intercept_)
