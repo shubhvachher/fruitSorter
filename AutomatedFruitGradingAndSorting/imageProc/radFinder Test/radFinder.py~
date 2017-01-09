@@ -28,7 +28,6 @@ def minVarRadius(cont, toShowImg, verbosity=0):
 	counter = 0
 	if(verbosity>0):
 		print("START of center finding")
-		print cont
 	while True:
 		centroid =(cx+dx,cy+dy)
 		cx =centroid[0]

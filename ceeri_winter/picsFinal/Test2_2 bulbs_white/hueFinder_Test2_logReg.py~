@@ -4,7 +4,6 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt #Used only with high verbosity
 
-
 all = os.listdir()
 all = [f for f in all if f[-1]=='p']
 all.sort()
@@ -61,8 +60,8 @@ def hueFinder(image, verbosity=0):
 				dy = j-x
 				if (((dx**2)+(dy**2)) <= (radMin-10)**2) and imageHSV[i][j][0]<60 and imageHSV[i][j][0]>23:
 					imageMasked[i][j]=imageHSV[i][j][0]
-					#if(imageHSV[i][j][2]<200):
-					hues.append(imageHSV[i][j][0])
+					if(imageHSV[i][j][2]<200):
+						hues.append(imageHSV[i][j][0])
 					values.append(imageHSV[i][j][2])
 
 		if(verbosity>0):
@@ -97,9 +96,13 @@ if __name__=='__main__':
 
 	from sklearn import linear_model
 	import pickle
-	with open("logRegModel", 'rb') as fr:
-		linear = pickle.load(fr)
 
-	print(linear.predict(x_train))
-
+	linear = linear_model.LogisticRegression()
+	linear.fit(x_train, y_train)
+	with open("logRegModel", 'wb') as fw:
+		pickle.dump(linear, fw)
 	print(linear.score(x_train, y_train), " accuracy")
+	print(linear.predict(x_train))
+	print(linear.get_params())
+	print('Coefficient: \n', linear.coef_)
+	print('Intercept: \n', linear.intercept_)

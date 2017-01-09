@@ -172,5 +172,5 @@ if __name__=='__main__':
 		allTimes.append(time.time()-aaa)
 		allRadii.append((radius/2.34, f))
 		print(f)
-	print allTimes
-	print allRadii
+	print(allTimes)
+	print(allRadii)

@@ -60,8 +60,8 @@ def hueFinder(image, verbosity=0):
 				dy = j-x
 				if (((dx**2)+(dy**2)) <= (radMin-10)**2) and imageHSV[i][j][0]<60 and imageHSV[i][j][0]>23:
 					imageMasked[i][j]=imageHSV[i][j][0]
-					if(imageHSV[i][j][2]<200):
-						hues.append(imageHSV[i][j][0])
+					#if(imageHSV[i][j][2]<200):
+					hues.append(imageHSV[i][j][0])
 					values.append(imageHSV[i][j][2])
 
 		if(verbosity>0):
@@ -70,7 +70,7 @@ def hueFinder(image, verbosity=0):
 			plt.colorbar()
 			plt.show()
 
-		return ("GREEN" if (0.22725*np.mean(values) + (-1.46806)*np.mean(hues))<(-0.01534) else "YELLOW", np.mean(hues), np.mean(values))
+		return ("GREEN" if (0.26307*np.mean(values) + (-1.76579)*np.mean(hues))<(-0.00985) else "YELLOW", np.mean(hues), np.mean(values))
 
 	else:
 		cv2.destroyAllWindows()

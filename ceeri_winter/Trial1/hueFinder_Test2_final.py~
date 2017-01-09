@@ -4,7 +4,6 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt #Used only with high verbosity
 
-
 all = os.listdir()
 all = [f for f in all if f[-1]=='p']
 all.sort()
@@ -60,7 +59,7 @@ def hueFinder(image, verbosity=0):
 				dx = i-y
 				dy = j-x
 				if (((dx**2)+(dy**2)) <= (radMin-10)**2) and imageHSV[i][j][0]<60 and imageHSV[i][j][0]>23:
-					imageMasked[i][j]=imageHSV[i][j][0]
+					imageMasked[i][j]=imageHSV[i][j][2]
 					#if(imageHSV[i][j][2]<200):
 					hues.append(imageHSV[i][j][0])
 					values.append(imageHSV[i][j][2])
@@ -71,7 +70,7 @@ def hueFinder(image, verbosity=0):
 			plt.colorbar()
 			plt.show()
 
-		return ("GREEN" if (0.20272*np.mean(values) + (-1.40552)*np.mean(hues))<(-0.02484) else "YELLOW", np.mean(hues), np.mean(values))
+		return ("GREEN" if (0.26307*np.mean(values) + (-1.76579)*np.mean(hues))<(-0.00985) else "YELLOW", np.mean(hues), np.mean(values))
 
 	else:
 		cv2.destroyAllWindows()
@@ -87,19 +86,6 @@ if __name__=='__main__':
 		hueVal = hueFinder(cv2.imread(f),0)
 		allTimes.append(time.time()-aaa)
 		allHue.append((hueVal[0], hueVal[1:], f))
-		x_train.append(list(hueVal[1:]))
-		y_train.append(0 if f[0] in ['E','F','G','H'] else 1)
 		print(f)
 	print(allTimes)
 	print("\n".join(str(allHue).split('.bmp')))
-
-	print(x_train , y_train)
-
-	from sklearn import linear_model
-	import pickle
-	with open("logRegModel", 'rb') as fr:
-		linear = pickle.load(fr)
-
-	print(linear.predict(x_train))
-
-	print(linear.score(x_train, y_train), " accuracy")

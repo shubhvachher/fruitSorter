@@ -119,7 +119,7 @@ def colorWeightBasedGrading(threadPrev=None, filenn="TestradBasedGrading", image
 	"""
 	time.sleep(imagerDelay)
 	aaa = time.time()
-	image = takeImage(ramp_frames=30, verbosity=0, camera = camera, filenn = filenn)
+	image = takeImage(ramp_frames=60, verbosity=0, camera = camera, filenn = filenn)
 	#print("Image taking time is", time.time()-aaa)
 	aaa = time.time()
 
@@ -177,7 +177,7 @@ if __name__ == '__main__':
 	threadPrev=None #Previous Thread
 	threadNow=None #Thread to start now
 
-	imagerDelay=1.2 #Used to fine tune the position of the fruit on the conveyer when image is taken.
+	imagerDelay=1.5 #Used to fine tune the position of the fruit on the conveyer when image is taken.
 	weightCutoff = 200 #Used to decide
 
 	filenn="0" #Used to store the images taken in the same folder as where the code is run from

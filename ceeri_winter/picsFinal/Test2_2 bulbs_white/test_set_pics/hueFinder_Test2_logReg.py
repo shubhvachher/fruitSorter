@@ -60,8 +60,8 @@ def hueFinder(image, verbosity=0):
 				dy = j-x
 				if (((dx**2)+(dy**2)) <= (radMin-10)**2) and imageHSV[i][j][0]<60 and imageHSV[i][j][0]>23:
 					imageMasked[i][j]=imageHSV[i][j][0]
-					if(imageHSV[i][j][2]<200):
-						hues.append(imageHSV[i][j][0])
+					#if(imageHSV[i][j][2]<200):
+					hues.append(imageHSV[i][j][0])
 					values.append(imageHSV[i][j][2])
 
 		if(verbosity>0):
